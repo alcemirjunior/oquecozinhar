@@ -6,16 +6,21 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.time.Instant;
 
 
 @NoArgsConstructor
 @Getter
 @Setter
 @AllArgsConstructor
-public class FieldMessage implements Serializable {
+public class StandardError implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String fieldName;
+    private Instant timestamp;
+    private Integer status;
+    private String error;
     private String message;
+    private String path;
+
 
 }

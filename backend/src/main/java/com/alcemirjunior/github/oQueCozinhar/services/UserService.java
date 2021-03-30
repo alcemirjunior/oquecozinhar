@@ -3,19 +3,29 @@ package com.alcemirjunior.github.oQueCozinhar.services;
 import com.alcemirjunior.github.oQueCozinhar.dto.RoleDTO;
 import com.alcemirjunior.github.oQueCozinhar.dto.UserDTO;
 import com.alcemirjunior.github.oQueCozinhar.dto.UserInsertDTO;
+import com.alcemirjunior.github.oQueCozinhar.dto.UserUpdateDTO;
 import com.alcemirjunior.github.oQueCozinhar.entities.Role;
 import com.alcemirjunior.github.oQueCozinhar.entities.User;
 import com.alcemirjunior.github.oQueCozinhar.repositories.RoleRepository;
 import com.alcemirjunior.github.oQueCozinhar.repositories.UserRepository;
+import com.alcemirjunior.github.oQueCozinhar.services.exceptions.DatabaseException;
+import com.alcemirjunior.github.oQueCozinhar.services.exceptions.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityNotFoundException;
+import java.util.Optional;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -31,6 +41,20 @@ public class UserService implements UserDetailsService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Transactional(readOnly = true)
+    public Page<UserDTO> findAllPaged(PageRequest pagedRequest){
+        Page<User> list = repository.findAll(pagedRequest);
+        return list.map(x -> new UserDTO(x));
+
+    }
+
+    @Transactional(readOnly = true)
+    public UserDTO findById(Long id){
+        Optional<User> obj = repository.findById(id);
+        User entity = obj.orElseThrow(()-> new ResourceNotFoundException("Entity not found"));
+        return new UserDTO(entity);
+    }
+
     @Transactional
     public UserDTO insert(UserInsertDTO dto) {
         User entity = new User();
@@ -40,6 +64,30 @@ public class UserService implements UserDetailsService {
         return new UserDTO(entity);
     }
 
+    @Transactional
+    public UserDTO update(Long id, UserUpdateDTO dto) {
+        try {
+            User entity = repository.getOne(id);
+            copyDtoToEntity(dto, entity);
+            entity = repository.save(entity);
+            return new UserDTO(entity);
+        }
+        catch (EntityNotFoundException e){
+            throw new ResourceNotFoundException("Id not found" + id);
+        }
+    }
+
+    public void delete(Long id) {
+        try {
+            repository.deleteById(id);
+        }
+        catch (EmptyResultDataAccessException e){
+            throw  new ResourceNotFoundException("Id not found: " + id);
+        }
+        catch (DataIntegrityViolationException e){
+            throw new DatabaseException("Integrirt violation");
+        }
+    }
 
     private void copyDtoToEntity(UserDTO dto, User entity) {
         entity.setFirstName(dto.getFirstName());
