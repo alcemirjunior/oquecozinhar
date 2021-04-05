@@ -1,0 +1,10 @@
+version: "3.7"
+services:
+  postgres-oquecozinhar:
+    container_name: postgres-oquecozinhar
+    image: postgres:13.2
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
