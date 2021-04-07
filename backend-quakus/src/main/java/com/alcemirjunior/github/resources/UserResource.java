@@ -6,6 +6,7 @@ import com.alcemirjunior.github.services.UserService;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
+import javax.validation.Validator;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -18,6 +19,9 @@ public class UserResource {
 
     @Inject
     UserService userService;
+
+    @Inject
+    Validator validator;
 
     @GET
     public  List<UserDTO> findAll(){
