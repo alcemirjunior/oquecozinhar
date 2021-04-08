@@ -3,6 +3,7 @@ package com.alcemirjunior.github.services;
 import com.alcemirjunior.github.dto.UserDTO;
 import com.alcemirjunior.github.entities.User;
 import com.alcemirjunior.github.repositories.UserRepository;
+import com.alcemirjunior.github.services.exceptions.ResourceNotFoundException;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
@@ -34,14 +35,14 @@ public class UserService {
 
     @Transactional
     public UserDTO update (Long id, UserDTO dto){
-        Optional<User> userOptional = userRepository.findByIdOptional(id);
-        if(userOptional.isPresent()){
-            User user = userOptional.get();
+        try{
+            User user = userRepository.findById(id);
             dtoToEntity(dto,user);
             userRepository.persist(user);
             return new UserDTO(user);
-        }else{
-            throw new NotFoundException("User Not Found: " + id);
+        }
+        catch (NullPointerException e){
+            throw new ResourceNotFoundException("Id not found " + id);
         }
     }
 
